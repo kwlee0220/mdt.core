@@ -43,7 +43,7 @@ public class ListMDTInstanceAllCommand extends MDTCommand {
 			table.addCell(inst.getId());
 			table.addCell(inst.getTag());
 			table.addCell(inst.getAssId());
-			table.addCell(FStream.from(inst.getSubmodelList()).join(","));
+			table.addCell(FStream.from(inst.getSubmodelList()).join(", "));
 			table.addCell(inst.getStatus().toString());
 			table.addCell(inst.getServiceEndpoint());
 		}

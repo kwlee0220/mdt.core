@@ -1,12 +1,11 @@
 package mdt.impl;
 
+import java.io.File;
 import java.nio.file.Paths;
 
-import utils.func.FOption;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import mdt.harbor.HarborImpl;
-import mdt.harbor.HarborProjectImpl;
-import mdt.harbor.Repository;
+import mdt.aas.AssetAdministrationShell;
 
 /**
  *
@@ -15,13 +14,10 @@ import mdt.harbor.Repository;
 public class TestRepository {
 	public static final void main(String... args) throws Exception {
 		MDTConfig config = MDTConfig.load(Paths.get("mdt_configs.yaml"));
-		HarborImpl harbor = HarborImpl.builder(config.getHarborConfig()).build();
-		HarborProjectImpl prj = harbor.getMDTInstanceProject();
 		
-		FOption<Repository> repo;
-		repo = prj.getRepository("busybox");
-		System.out.println(repo);
-		repo = prj.getRepository("xxx");
-		System.out.println(repo);
+		ObjectMapper mapper = new ObjectMapper();
+		AssetAdministrationShell shell = mapper.readValue(new File("aas_heater.json"), AssetAdministrationShell.class);
+
+		System.out.println(shell);
 	}
 }

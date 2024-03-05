@@ -7,8 +7,8 @@ plugins {
 group = 'etri'
 version = '24.03.05'
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+//sourceCompatibility = JavaVersion.VERSION_1_8
+//targetCompatibility = JavaVersion.VERSION_1_8
 [compileJava,compileTestJava]*.options*.encoding = 'UTF-8'
 
 repositories {
@@ -17,12 +17,13 @@ repositories {
 
 ext {
 	logback_version = '1.3.14'
-//	log4j_version = '2.18.0'
 	
 	okhttp_version = '4.12.0'
 	jsonpath_version = '2.9.0'
 	picocli_version = '3.9.6'
 	docker_java_version = '3.0.14'
+	
+	aas4j_version = '1.0.1'
 	
 	postgresql_version = '42.3.3'
 }
@@ -47,6 +48,9 @@ dependencies {
 	
 	// Docker Java Binding
 	implementation "com.github.docker-java:docker-java:${docker_java_version}"
+	
+	//AAS model
+//	implementation "org.eclipse.digitaltwin.aas4j:aas4j-dataformat-json:${aas4j_version}"
 	
 	implementation fileTree(dir: 'lib', include: '*.jar')
 }

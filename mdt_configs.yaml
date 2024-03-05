@@ -1,0 +1,18 @@
+---
+dockerConfig:
+   host: tcp://192.168.0.70:2375
+
+harborConfig:
+   endpoint: 192.168.0.70
+   userId: admin
+   password: Mdt2024^^
+   email: mdt.etri.re.kr
+   MDTInstanceProject: mdt_instance
+   
+jdbcConfig:
+   system: postgresql
+   host: localhost
+   port: 5432
+   user: mdt
+   password: Mdt2024^^
+   database: mdt

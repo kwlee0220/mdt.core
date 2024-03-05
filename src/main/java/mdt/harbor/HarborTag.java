@@ -1,5 +1,7 @@
 package mdt.harbor;
 
+import mdt.docker.DockerImageId;
+
 /**
  *
  * @author Kang-Woo Lee (ETRI)
@@ -10,15 +12,18 @@ public class HarborTag {
 	private final String m_artifactName;
 	private final String m_tag;
 	
-	public static HarborTag from(HarborProjectImpl project, String dockerTag) {
-		String[] parts = dockerTag.split(":");
-		return new HarborTag(project.getHarbor().getEndpoint(), project.getName(), parts[0], parts[1]);
+	public static HarborTag from(HarborProjectImpl project, String repo, String tag) {
+		return new HarborTag(project.getHarbor().getEndpoint(), project.getName(), repo, tag);
 	}
 	
-	public static HarborTag from(HarborImpl harbor, String dockerTag) {
-		String[] parts = dockerTag.split(":");
+	public static HarborTag from(HarborProjectImpl project, DockerImageId imageId) {
+		return new HarborTag(project.getHarbor().getEndpoint(), project.getName(),
+							imageId.repository(), imageId.tag());
+	}
+	
+	public static HarborTag from(HarborImpl harbor,DockerImageId imageId) {
 		return new HarborTag(harbor.getEndpoint(), harbor.getMDTInstanceProject().getName(),
-								parts[0], parts[1]);
+							imageId.repository(), imageId.tag());
 	}
 	
 	public static HarborTag parse(String dockerTag) {

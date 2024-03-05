@@ -1,8 +1,8 @@
 package mdt.impl;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -13,6 +13,8 @@ import utils.func.FOption;
 import utils.func.Unchecked;
 import utils.stream.FStream;
 
+import mdt.aas.AssetAdministrationShell;
+import mdt.docker.DockerImageId;
 import mdt.docker.MDTDocker;
 import mdt.harbor.HarborImpl;
 import mdt.harbor.HarborProjectImpl;
@@ -58,21 +60,33 @@ public class MDTInstanceManagerImpl implements MDTInstanceManager {
 	}
 
 	@Override
-	public String addInstance(String dockerKeyTag, String assetShell, boolean force, FOption<Duration> timeout)
+	public String addInstance(DockerImageId imageId, String assetShell, boolean force, FOption<Duration> timeout)
 		throws MDTInstanceManagerException, TimeoutException, InterruptedException {
-		final HarborTag tag = HarborTag.from(m_harborProject, dockerKeyTag);
+		final HarborTag tag = HarborTag.from(m_harborProject, imageId);
 
 		boolean tagCreated = false;
 		try {
+			String aasId = null;
+			List<String> submodelShortIds = null;
+			try {
+				AssetAdministrationShell shell = AssetAdministrationShell.parseJson(new File(assetShell));
+				aasId = shell.getId();
+				submodelShortIds = shell.getSubmodelShortIds();
+			}
+			catch ( Exception e ) {
+				throw new MDTInstanceManagerException("fails to register the instance, unable to parse AAS file", e);
+			}
+			
 			// 등록시킬 docker image을 tag를 통해 찾는다.
-			FOption<Image> oimage = m_docker.getImage(dockerKeyTag);
+			FOption<Image> oimage = m_docker.getImage(imageId);
 			if ( oimage.isAbsent() ) {
-				throw new MDTInstanceManagerException("Docker image not found: tag=" + dockerKeyTag);
+				throw new MDTInstanceManagerException("Docker image not found: image=" + imageId);
 			}
 			
 			if ( m_harborProject.getRepository(tag.getArtifactName()).isAbsent() ) {
 				// Harbor 등록하기 위한 tag를 부여하고, push 시킨다.
-				boolean tagExists = m_docker.getImage(tag.getFullNameWithTag()).isPresent();
+				DockerImageId harborImageId = DockerImageId.parse(tag.getFullNameWithTag());
+				boolean tagExists = m_docker.getImage(harborImageId).isPresent();
 				if ( !tagExists ) {
 					m_docker.tagImage(oimage.get(), tag);
 					tagCreated = true;
@@ -85,8 +99,8 @@ public class MDTInstanceManagerImpl implements MDTInstanceManager {
 			
 			// 등록된 image 및 AAS 정보를 instance database에 저장한다.
 			try {
-				Record rec = new Record(tag.getArtifactName(), tag.getTag(), assetShell,
-										Collections.emptyList(), null);
+				Record rec = new Record(tag.getArtifactName(), tag.getTag(), aasId,
+										submodelShortIds, null);
 				if ( force ) {
 					m_instStore.addOrReplaceRecord(rec);
 				}
@@ -96,7 +110,7 @@ public class MDTInstanceManagerImpl implements MDTInstanceManager {
 			}
 			catch ( SQLException e ) {
 				m_harborProject.removeRepository(tag.getArtifactName());
-				throw new MDTInstanceManagerException("fails to register an instance: image=" + dockerKeyTag, e);
+				throw new MDTInstanceManagerException("fails to register an instance: image=" + imageId, e);
 			}
 		}
 		finally {

@@ -52,9 +52,10 @@ public class MDTDocker implements Closeable {
 		return m_dockerClient.listImagesCmd().exec();
 	}
 	
-	public FOption<Image> getImage(String repoTag) {
+	public FOption<Image> getImage(DockerImageId imageId) {
+		String key = imageId.toString();
 		return FStream.from(getImageAll())
-						.findFirst(img -> FStream.of(img.getRepoTags()).exists(repoTag::equals));
+						.findFirst(img -> FStream.of(img.getRepoTags()).exists(key::equals));
 	}
 	
 	public void tagImage(Image image, HarborTag path) {

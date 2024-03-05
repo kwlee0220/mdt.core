@@ -8,6 +8,7 @@ import utils.LoggerNameBuilder;
 import utils.UnitUtils;
 import utils.func.FOption;
 
+import mdt.docker.DockerImageId;
 import mdt.impl.MDTConfig;
 import mdt.model.MDTInstanceManager;
 import picocli.CommandLine;
@@ -25,8 +26,7 @@ public class AddMDTInstanceCommand extends MDTCommand {
 	private static final Logger s_logger = LoggerNameBuilder.from(AddMDTInstanceCommand.class).dropSuffix(2)
 															.append("register.mdt_instances").getLogger();
 
-	@Parameters(index="0", paramLabel="repo:tag", description="tagged repository name to register")
-	private String m_imageName;
+	private DockerImageId m_imageId;
 	
 	@Option(names={"--aas"}, paramLabel="path", required=true, description="AAS Json file path")
 	private String m_aasFile;
@@ -41,12 +41,17 @@ public class AddMDTInstanceCommand extends MDTCommand {
 		setLogger(s_logger);
 	}
 
+	@Parameters(index="0", paramLabel="repo:tag", description="tagged repository name to register")
+	public void setImageId(String idStr) {
+		m_imageId = DockerImageId.parse(idStr);
+	}
+
 	@Override
 	public void run(MDTConfig configs) throws Exception {
 		MDTInstanceManager mgr = this.createMDTInstanceManager(configs);
 		
 		FOption<Duration> timeout = FOption.ofNullable(m_timeout).map(to -> UnitUtils.parseDuration(to));
-		mgr.addInstance(m_imageName, m_aasFile, m_force, timeout);
+		mgr.addInstance(m_imageId, m_aasFile, m_force, timeout);
 	}
 
 	public static final void main(String... args) throws Exception {
