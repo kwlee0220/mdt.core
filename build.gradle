@@ -7,8 +7,8 @@ plugins {
 group = 'etri'
 version = '24.03.05'
 
-//sourceCompatibility = JavaVersion.VERSION_1_8
-//targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = '17'
+targetCompatibility = '17'
 [compileJava,compileTestJava]*.options*.encoding = 'UTF-8'
 
 repositories {
@@ -50,7 +50,7 @@ dependencies {
 	implementation "com.github.docker-java:docker-java:${docker_java_version}"
 	
 	//AAS model
-//	implementation "org.eclipse.digitaltwin.aas4j:aas4j-dataformat-json:${aas4j_version}"
+	implementation "org.eclipse.digitaltwin.aas4j:aas4j-dataformat-json:${aas4j_version}"
 	
 	implementation fileTree(dir: 'lib', include: '*.jar')
 }

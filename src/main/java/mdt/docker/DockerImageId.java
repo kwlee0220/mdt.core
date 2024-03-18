@@ -15,12 +15,16 @@ public record DockerImageId(String repository, String tag) {
 			return new DockerImageId(parts[0], "latest");
 		}
 		else {
-			throw new IllegalArgumentException("invalid docker image id: " + imageId);
+			throw new RuntimeException("invalid docker image id: " + imageId);
 		}
+	}
+	
+	public String getId() {
+		return this.repository + ":" + this.tag;
 	}
 	
 	@Override
 	public String toString() {
-		return this.repository + ":" + this.tag;
+		return getId();
 	}
 }

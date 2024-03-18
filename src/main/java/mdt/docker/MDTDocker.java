@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.annotation.Nullable;
+
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Image;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -17,7 +19,7 @@ import utils.func.FOption;
 import utils.stream.FStream;
 
 import mdt.harbor.HarborConfig;
-import mdt.harbor.HarborTag;
+import mdt.harbor.HarborImageId;
 
 /**
  *
@@ -54,24 +56,25 @@ public class MDTDocker implements Closeable {
 	
 	public FOption<Image> getImage(DockerImageId imageId) {
 		String key = imageId.toString();
+		
 		return FStream.from(getImageAll())
 						.findFirst(img -> FStream.of(img.getRepoTags()).exists(key::equals));
 	}
 	
-	public void tagImage(Image image, HarborTag path) {
+	public void tagImage(Image image, HarborImageId path) {
 		m_dockerClient.tagImageCmd(image.getId(), path.getFullName(), path.getTag()).exec();
 	}
 	
-	public void removeTag(HarborTag path) {
-		m_dockerClient.removeImageCmd(path.getFullNameWithTag()).exec();
+	public void removeTag(String imageName) {
+		m_dockerClient.removeImageCmd(imageName).exec();
 	}
 	
-	public void pushToHarbor(HarborTag path, FOption<Duration> timeout)
+	public void pushToHarbor(HarborImageId path, @Nullable Duration timeout)
 		throws TimeoutException, InterruptedException {
 		PushImageResultCallback cb = m_dockerClient.pushImageCmd(path.getFullNameWithTag())
 													.exec(new PushImageResultCallback());
-		if ( timeout.isPresent() ) {
-			if ( !cb.awaitCompletion(timeout.get().getSeconds(), TimeUnit.SECONDS) ) {
+		if ( timeout != null ) {
+			if ( !cb.awaitCompletion(timeout.getSeconds(), TimeUnit.SECONDS) ) {
 				throw new TimeoutException();
 			}
 		}

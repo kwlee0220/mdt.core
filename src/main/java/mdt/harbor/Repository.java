@@ -21,8 +21,12 @@ public class Repository {
 	private Integer id;
 	@JsonProperty("project_id")
 	private Integer projectId;
+	
 	@JsonProperty("name")
-	private String name;
+	private String fullName;
+	private String projectName;
+	private String artifactName;
+	
 	@JsonProperty("description")
 	private String description;
 	@JsonProperty("artifact_count")
@@ -58,13 +62,22 @@ public class Repository {
 	}
 
 	@JsonProperty("name")
-	public String getName() {
-		return this.name;
+	public String getFullName() {
+		return this.fullName;
+	}
+	public String getProjectName() {
+		return this.projectName;
+	}
+	public String getArtifactName() {
+		return this.artifactName;
 	}
 
-	@JsonProperty("project_name")
-	public void setName(String name) {
-		this.name = name;
+	@JsonProperty("name")
+	public void setFullName(String name) {
+		this.fullName = name;
+		int idx = name.indexOf('/');
+		this.projectName = name.substring(0, idx);
+		this.artifactName = name.substring(idx+1);
 	}
 
 	@JsonProperty("description")
@@ -99,6 +112,6 @@ public class Repository {
 
 	@Override
 	public String toString() {
-		return String.format("%s(%d):created=%s", name, id, this.creationTime);
+		return String.format("%s(%d):created=%s", fullName, id, this.creationTime);
 	}
 }

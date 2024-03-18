@@ -11,6 +11,7 @@ import utils.UsageHelp;
 import utils.Utilities;
 import utils.func.FOption;
 
+import picocli.CommandLine;
 import picocli.CommandLine.Help.Ansi;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Model.CommandSpec;
@@ -42,7 +43,8 @@ public abstract class HomeDirPicocliCommand implements Runnable, LoggerSettable 
 			m_homeDir = m_homeDirEnvVarName
 								.flatMap(env -> FOption.ofNullable(System.getenv(env)))
 								.map(Paths::get)
-								.getOrElse(Utilities.getCurrentWorkingDir().toPath());
+								.getOrElse(Utilities.getUserHomeDir().toPath());
+//								.getOrElse(Utilities.getCurrentWorkingDir().toPath());
 		}
 		
 		return m_homeDir;
@@ -88,5 +90,28 @@ public abstract class HomeDirPicocliCommand implements Runnable, LoggerSettable 
 	
 	public Path toAbsolutePath(String path) {
 		return toAbsolutePath(Paths.get(path));
+	}
+
+	protected static final void runCommand(HomeDirPicocliCommand cmd, String[] args) throws Exception {
+		CommandLine commandLine = new CommandLine(cmd).setUsageHelpWidth(100);
+		try {
+			commandLine.parse(args);
+
+			if ( commandLine.isUsageHelpRequested() ) {
+				commandLine.usage(System.out, Ansi.OFF);
+			}
+			else {
+				try {
+					cmd.run();
+				}
+				catch ( Exception e ) {
+					System.err.println(e);
+				}
+			}
+		}
+		catch ( Throwable e ) {
+			System.err.println(e);
+			commandLine.usage(System.out, Ansi.OFF);
+		}
 	}
 }

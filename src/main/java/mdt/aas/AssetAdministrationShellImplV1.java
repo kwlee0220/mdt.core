@@ -9,6 +9,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.databind.DatabindException;
@@ -20,26 +21,29 @@ import utils.stream.FStream;
  *
  * @author Kang-Woo Lee (ETRI)
  */
-public class AssetAdministrationShell {
-	@JsonProperty("modelType")
-	private ModelType m_modelType;
-	@JsonProperty("identification")
-	private Identification m_identification;
-	@JsonProperty("assetInformation")
-	private AssetInformation m_assetInformation;
-	@JsonProperty("submodels")
-	private List<Submodel> m_submodels;
-	@JsonProperty("idShort")
-	private String m_idShort;
+public class AssetAdministrationShellImplV1 {
+	@JsonProperty("id") private String m_id;
+	@JsonProperty("idShort") private String m_idShort;
+//	@JsonProperty("assetInformation") private AssetInformation m_assetInformation;
+	@JsonProperty("submodels") private List<Submodel> m_submodels;
+	@JsonProperty("identification") private Identification m_identification;
 	
-	public static AssetAdministrationShell parseJson(File jsonFile)
+	@JsonIgnore
+	private Map<String, Object> m_additionalProperties = new HashMap<String, Object>();
+	
+	public static AssetAdministrationShellImplV1 parseJson(File jsonFile)
 		throws StreamReadException, DatabindException, IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		return mapper.readValue(jsonFile, AssetAdministrationShell.class);
+		return mapper.readValue(jsonFile, AssetAdministrationShellImplV1.class);
 	}
-	
+
+	@JsonProperty("id")
 	public String getId() {
-		return m_identification.id;
+		return m_id != null ? m_id : m_identification.id();
+	}
+	@JsonProperty("id")
+	public void setId(String id) {
+		m_id = id;
 	}
 
 	@JsonProperty("idShort")
@@ -50,6 +54,24 @@ public class AssetAdministrationShell {
 	public void setIdShort(String idShort) {
 		m_idShort = idShort;
 	}
+
+//	@JsonProperty("assetInformation")
+//	public AssetInformation getAssetInformation() {
+//		return m_assetInformation;
+//	}
+//	
+//	@JsonProperty("assetInformation")
+//	public void setAssetInformation(AssetInformation assetInfo) {
+//		this.m_assetInformation = assetInfo;
+//	}
+//	
+//	public String getAssertKind() {
+//		return m_assetInformation.assetKind();
+//	}
+//	
+//	public String getGlobalAssetId() {
+//		return m_assetInformation.globalAssetId();
+//	}
 	
 	public List<String> getSubmodelIds() {
 		return FStream.from(m_submodels)
@@ -59,41 +81,11 @@ public class AssetAdministrationShell {
 						.toList();
 	}
 	
-	public List<String> getSubmodelShortIds() {
-		int prefixLen = getId().length() + 1;
+	public List<String> getSubmodelShortIds(String prefix) {
+		int prefixLen = prefix.length();
 		return FStream.from(getSubmodelIds())
-						.map(id -> id.substring(prefixLen))
+						.map(id -> id.startsWith(prefix) ? id.substring(prefixLen) : id)
 						.toList();
-	}
-
-	@JsonProperty("identification")
-	public Identification getIdentification() {
-		return m_identification;
-	}
-	
-	@JsonProperty("identification")
-	public void setIdentification(Identification id) {
-		this.m_identification = id;
-	}
-
-	@JsonProperty("modelType")
-	public ModelType getModelType() {
-		return m_modelType;
-	}
-	
-	@JsonProperty("modelType")
-	public void setModelType(ModelType type) {
-		this.m_modelType = type;
-	}
-
-	@JsonProperty("assetInformation")
-	public AssetInformation getAssetInformation() {
-		return m_assetInformation;
-	}
-	
-	@JsonProperty("assetInformation")
-	public void setAssetInformation(AssetInformation assetInfo) {
-		this.m_assetInformation = assetInfo;
 	}
 
 	@JsonProperty("submodels")
@@ -105,9 +97,6 @@ public class AssetAdministrationShell {
 	public void setSubmodels(List<Submodel> subModels) {
 		this.m_submodels = subModels;
 	}
-	
-	@JsonIgnore
-	private Map<String, Object> m_additionalProperties = new HashMap<String, Object>();
 
 	@JsonAnyGetter
 	public Map<String, Object> getAdditionalProperties() {
@@ -121,15 +110,14 @@ public class AssetAdministrationShell {
 
 	@Override
 	public String toString() {
-		String submodelIds = FStream.from(getSubmodelShortIds()).join(", ", "[", "]");
+		String submodelIds = FStream.from(getSubmodelShortIds(getId() + "/")).join(", ", "[", "]");
 		return String.format("id=%s (%s), submodels=%s", getId(), getIdShort(), submodelIds);
 	}
 
 	public record Identification(String idType, String id) { }
-	public record ModelType(String name) { }
-	public record GlobalAssetId(List<String> keys) { }
-	public record AssetInformation(String assetKind, GlobalAssetId globalAssetId) { }
+	public record AssetInformation(String assetKind, String globalAssetId) { }
 
-	public static record SubmodelKey(String idType, String type, String value) { }
-	public record Submodel(List<SubmodelKey> keys) { }
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static record SubmodelKey(String type, String value) { }
+	public record Submodel(List<SubmodelKey> keys, String type) { }
 }

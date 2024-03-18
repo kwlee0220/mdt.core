@@ -1,4 +1,4 @@
-package mdt.test;
+package mdt.impl;
 
 import java.util.Collections;
 
@@ -9,7 +9,6 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import mdt.model.MDTInstance;
 
 /**
  *

@@ -14,6 +14,7 @@ import utils.jdbc.JdbcProcessor;
 
 import mdt.docker.DockerConfig;
 import mdt.harbor.HarborConfig;
+import mdt.kubernetes.KubernetesConfig;
 
 
 /**
@@ -26,6 +27,8 @@ public final class MDTConfig {
 	private DockerConfig m_dockerConfig;
 	private HarborConfig m_harborConfig;
 	private JdbcProcessor.Configuration m_jdbcConfig;
+	private KubernetesConfig m_k8sConfig;
+	private String m_mdtInstanceProject;
 	
 	public HarborConfig getHarborConfig() {
 		return m_harborConfig;
@@ -48,8 +51,22 @@ public final class MDTConfig {
 		m_dockerConfig = dockerConfig;
 	}
 	
+	public KubernetesConfig getKubernetesConfig() {
+		return m_k8sConfig;
+	}
+	public void setKubernetesConfig(KubernetesConfig k8sConfig) {
+		m_k8sConfig = k8sConfig;
+	}
+	
 	public JdbcProcessor newJdbcProcessor() {
 		return JdbcProcessor.create(m_jdbcConfig);
+	}
+	
+	public String getInstanceProject() {
+		return m_mdtInstanceProject;
+	}
+	public void setInstanceProject(String project) {
+		m_mdtInstanceProject = project;
 	}
 	
 	public static MDTConfig load(Path configFile) throws IOException {

@@ -3,6 +3,7 @@ package mdt.harbor;
 import java.io.IOException;
 import java.util.Base64;
 
+import mdt.impl.SSLUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -12,17 +13,21 @@ import okhttp3.Response;
  * @author Kang-Woo Lee (ETRI)
  */
 public class HarborImpl {
-	private static final String PROJECT_MDT_INSTANCE = "mdt_instance";
-//	@SuppressWarnings("unused")
-//	private static final String PROJECT_MDT_AI = "mdt_ai";
-	
 	private final String m_authHeader;
 	private final String m_endpoint;
+	private final OkHttpClient.Builder m_clientBuilder;
 	
-	private HarborImpl(Builder builder) {
+	private HarborImpl(Builder builder) throws MDTHarborException {
 		String authStr = String.format("%s:%s", builder.m_harborUserId, builder.m_harborPassword);
 		m_authHeader = "Basic " + Base64.getEncoder().encodeToString(authStr.getBytes());
 		m_endpoint = builder.m_harborEndpoint;
+		
+		try {
+			m_clientBuilder = SSLUtils.newTrustAllOkHttpClientBuilder();
+		}
+		catch ( Exception e ) {
+			throw new MDTHarborException("fails to create a RESTful client, cause=" + e);
+		}
 	}
 	
 	public String getEndpoint() {
@@ -30,48 +35,36 @@ public class HarborImpl {
 	}
 	
 	public String getUrlPrefix() {
-		return String.format("http://%s/api/v2.0", m_endpoint);
+		return String.format("https://%s/api/v2.0", m_endpoint);
 	}
 	
 	public HarborProjectImpl getProject(String prj) {
 		return new HarborProjectImpl(this, prj);
 	}
 	
-	public HarborProjectImpl getMDTInstanceProject() {
-		return new HarborProjectImpl(this, PROJECT_MDT_INSTANCE);
-	}
-	
-	public Response sendRequest(String url) {
-		try {
-			Request request = new Request.Builder()
-									.url(url)
-									.addHeader("authorization", m_authHeader)
-									.get()
-									.build();
-
-			OkHttpClient okhttpClient = new OkHttpClient();
-			return okhttpClient.newCall(request).execute();
-		}
-		catch ( IOException e ) {
-			throw new MDTHarborException("fails to connect Harbor: url=%s", e);
-		}
-	}
-	
-	public Request deleteRequest(String url) {
+	public Request newGetRequest(String url) {
 		return new Request.Builder()
-				.url(url)
-				.addHeader("authorization", m_authHeader)
-				.delete()
-				.build();
+							.url(url)
+							.addHeader("Authorization", m_authHeader)
+							.get()
+							.build();
+	}
+	
+	public Request newDeleteRequest(String url) {
+		return new Request.Builder()
+							.url(url)
+							.addHeader("Authorization", m_authHeader)
+							.delete()
+							.build();
 	}
 	
 	public Response call(Request request) {
 		try {
-			OkHttpClient okhttpClient = new OkHttpClient();
+			OkHttpClient okhttpClient = m_clientBuilder.build();
 			return okhttpClient.newCall(request).execute();
 		}
 		catch ( IOException e ) {
-			throw new MDTHarborException("fails to connect Harbor: url=%s", e);
+			throw new MDTHarborException("fails to connect Harbor: url=" + request.url() + ", cause=" + e);
 		}
 	}
 

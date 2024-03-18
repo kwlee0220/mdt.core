@@ -40,9 +40,12 @@ public class MDTCommandsMain implements Runnable {
 			description="MDT Instance related commands",
 			subcommands= {
 				FormatMDTInstanceStoreCommand.class,
+				GetMDTInstanceCommand.class,
 				ListMDTInstanceAllCommand.class,
 				AddMDTInstanceCommand.class,
 				RemoveMDTInstanceCommand.class,
+				StartMDTInstanceCommand.class,
+				StopMDTInstanceCommand.class,
 			})
 	public static class MDTInstanceCommand implements Runnable {
 		@Spec private CommandSpec m_spec;

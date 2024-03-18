@@ -10,7 +10,7 @@ import mdt.harbor.HarborImpl;
 import mdt.impl.MDTConfig;
 import mdt.impl.MDTInstanceManagerImpl;
 import mdt.impl.MDTInstanceStore;
-import mdt.model.MDTInstanceManager;
+import mdt.kubernetes.KubernetesRemote;
 import picocli.CommandLine.Option;
 
 
@@ -30,12 +30,13 @@ public abstract class MDTCommand extends HomeDirPicocliCommand {
 		super(FOption.of(ENVVAR_HOME));
 	}
 	
-	protected MDTInstanceManager createMDTInstanceManager(MDTConfig config) {
+	protected MDTInstanceManagerImpl createMDTInstanceManager(MDTConfig config) {
 		HarborImpl harbor = HarborImpl.builder(config.getHarborConfig()).build();
 		MDTInstanceStore store = new MDTInstanceStore(config.newJdbcProcessor());
 		MDTDocker docker = MDTDocker.get(config.getDockerConfig(), config.getHarborConfig());
+		KubernetesRemote k8s = KubernetesRemote.connect(config.getKubernetesConfig());
 		
-		return new MDTInstanceManagerImpl(store, harbor, docker);
+		return new MDTInstanceManagerImpl(store, harbor, docker, k8s, config);
 	}
 	
 	@Override
